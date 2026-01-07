@@ -8,6 +8,7 @@ export class Post {
   petName: string;
   location: string;
   photos: string;
+  description: string;
   interactionsCount: number;
   solved: boolean;
 
@@ -18,7 +19,8 @@ export class Post {
     this.createdAt = new Date(data.created_at).toLocaleString();
     this.petName = data.pet_name;
     this.location = data.location;
-    this.photos = data.photos;
+    this.photos = data.photos.toString();
+    this.description = data.description;
     this.interactionsCount = data.interactions_count;
     this.solved = data.solved === 1;
   }
@@ -30,4 +32,5 @@ export interface NewPostRequest {
   petName: string;
   location: string;
   photos: string;
+  description: string;
 }
