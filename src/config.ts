@@ -5,8 +5,10 @@ interface Config {
   dbUrl: string;
   dbUser: string;
   dbPassword: string;
-  dbName: string
+  dbName: string;
   port: number;
+  jwtSecret: string;
+  jwtExpiresIn: string;
 }
 
 export const config: Config = {
@@ -15,4 +17,6 @@ export const config: Config = {
     dbPassword: process.env.DATABASE_PASSWORD || 'password',
     dbName: process.env.DATABASE_NAME || 'db',
     port: parseInt(process.env.PORT || '3000', 10),
+    jwtSecret: process.env.JWT_SECRET || 'secret',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h'
 };
