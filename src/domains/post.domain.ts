@@ -27,8 +27,6 @@ export class Post {
 }
 
 export interface NewPostRequest {
-  createdBy: string;
-  userAvatar: string;
   petName: string;
   location: string;
   photos: string;
