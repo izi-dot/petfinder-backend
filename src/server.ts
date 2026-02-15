@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import type { Request, Response } from 'express';
-import type { NewPostRequest } from './domains/post.domain.js';
+import type { AddCommentRequest, NewPostRequest } from './domains/post.domain.js';
 import type { LoginRequest, RegisterRequest, User } from './domains/user.domain.js';
 import { config } from './config.js';
 import { DatabaseController } from './database.controller.js';
@@ -22,7 +22,7 @@ const authenticateToken = (req: any, res: any, next: any) => {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
+    return res.status(401).json({ message: 'Login required to complete this action.' });
   }
 
   jwt.verify(token, config.jwtSecret, (err: any, user: any) => {
@@ -104,7 +104,7 @@ app.post('/api/login', async (req: Request<{}, {}, LoginRequest>, res) => {
    const users = await dbController.findUserByEmail(loginRequest.email);
 
     if (users.length === 0 || users[0] === undefined) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'No account found. Create one to continue.' });
     }
 
     const user = users[0];
@@ -112,12 +112,17 @@ app.post('/api/login', async (req: Request<{}, {}, LoginRequest>, res) => {
     // Verify password
     const isValidPassword = await bcrypt.compare(loginRequest.password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Incorrect password. Please try again.' });
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      {
+        id: user.id, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email
+      },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn }
     );
@@ -170,6 +175,29 @@ app.post('/api/post', authenticateToken, async (req: Request<{}, {}, NewPostRequ
   try {
     const user = getAuthUser(req);
     await dbController.createPost(req.body, user);
+    res.status(201).json();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+});
+
+app.get('/api/post/:id', async (req, res) => {
+  const postId = req.params.id;
+  try {
+    const search  = req.query.search;
+    const results = await dbController.getPost(postId);
+    res.status(200).json(results);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+});
+
+app.post('/api/comment', authenticateToken, async (req: Request<{}, {}, AddCommentRequest>, res) => {
+  try {
+    const user = getAuthUser(req);
+    await dbController.addComment(req.body, user);
     res.status(201).json();
   } catch (error) {
     console.error(error);
